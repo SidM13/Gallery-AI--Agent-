@@ -6,6 +6,8 @@ local language model, and Gmail Drafts is the owner's review interface.
 
 Project site: https://sidm13.github.io/Gallery-AI--Agent-/
 
+Cloud deployment guide: [`CLOUD-DEPLOYMENT.md`](CLOUD-DEPLOYMENT.md)
+
 The workflows are deliberately **inactive on import**. Configure and test each
 one before activating it.
 
