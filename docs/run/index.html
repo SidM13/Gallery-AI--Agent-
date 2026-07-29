@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Install and open the Gallery AI agents on your own computer.">
+  <title>Run Gallery AI Locally</title>
+  <style>
+    :root { color-scheme:dark; --ink:#f4efe6; --muted:#aaa59d; --line:#34312e; --accent:#e4b363; --panel:#191817; }
+    * { box-sizing:border-box; }
+    body { margin:0; font:16px/1.6 Inter,ui-sans-serif,system-ui,sans-serif; background:#0e0e0d; color:var(--ink); }
+    a { color:inherit; }
+    .wrap { width:min(980px,calc(100% - 36px)); margin:auto; }
+    nav { display:flex; justify-content:space-between; padding:24px 0; }
+    nav a { text-decoration:none; color:var(--muted); }
+    main { padding:70px 0 100px; }
+    .eyebrow { color:var(--accent); text-transform:uppercase; letter-spacing:.15em; font-size:.78rem; font-weight:800; }
+    h1 { margin:14px 0 20px; max-width:850px; font:clamp(2.8rem,7vw,6rem)/.98 Georgia,serif; letter-spacing:-.045em; }
+    .lead { max-width:720px; color:var(--muted); font-size:1.15rem; }
+    .notice { margin:32px 0; padding:18px 20px; border:1px solid #614b29; background:#1e1911; border-radius:12px; }
+    h2 { margin-top:65px; font:2rem/1.1 Georgia,serif; }
+    pre { overflow:auto; padding:22px; border:1px solid var(--line); background:var(--panel); border-radius:12px; color:#e7dfd3; }
+    .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+    .agent { display:flex; flex-direction:column; gap:12px; padding:24px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    .agent h3,.agent p { margin:0; }
+    .agent p { color:var(--muted); flex:1; }
+    .button { align-self:flex-start; padding:10px 15px; border-radius:999px; background:var(--accent); color:#17120b; font-weight:800; text-decoration:none; }
+    .secondary { background:transparent; border:1px solid var(--line); color:var(--ink); }
+    .steps li { margin:10px 0; color:var(--muted); }
+    code { color:var(--ink); }
+    @media(max-width:700px){ .grid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <nav class="wrap">
+    <a href="../">← Gallery AI</a>
+    <a href="https://github.com/SidM13/Gallery-AI--Agent-">GitHub repository ↗</a>
+  </nav>
+  <main class="wrap">
+    <div class="eyebrow">Universal local launcher</div>
+    <h1>Run Gallery AI on your machine.</h1>
+    <p class="lead">This page is shareable with anyone. Each person runs a private copy of n8n and Qwen on their own computer, then uses the buttons below to open the agents.</p>
+
+    <div class="notice"><strong>Important:</strong> complete the one-time installation first. The buttons open <code>localhost</code>, so they connect only to the n8n instance running on the visitor’s own computer.</div>
+
+    <h2>1. Install and start</h2>
+    <pre><code>git clone https://github.com/SidM13/Gallery-AI--Agent-.git
+cd Gallery-AI--Agent-
+cp .env.example .env
+
+# Edit .env and replace the example passwords, then:
+make validate
+make up
+make import
+make doctor</code></pre>
+
+    <ol class="steps">
+      <li>Open n8n and create the local owner account.</li>
+      <li>Connect that person’s Google Sheets, Gmail, and Calendar credentials.</li>
+      <li>Keep agents inactive until each manual demo succeeds.</li>
+    </ol>
+
+    <p><a class="button secondary" href="http://localhost:5678">Open local n8n</a></p>
+
+    <h2>2. Open an agent</h2>
+    <div class="grid">
+      <article class="agent"><h3>Artist Onboarding</h3><p>Collect, summarize, and review a new artist application.</p><a class="button" href="http://localhost:5678/workflow/PttJsLrfRftXLDZc">Open locally</a></article>
+      <article class="agent"><h3>Opportunity Finder</h3><p>Match current opportunities with represented artists.</p><a class="button" href="http://localhost:5678/workflow/auRudhRN3zvaZTvH">Open locally</a></article>
+      <article class="agent"><h3>Collector Assistant</h3><p>Prepare artwork recommendations for collector inquiries.</p><a class="button" href="http://localhost:5678/workflow/UwZtXNHQCHcPZkLR">Open locally</a></article>
+      <article class="agent"><h3>Weekly Gallery Report</h3><p>Generate the weekly operational report and Gmail draft.</p><a class="button" href="http://localhost:5678/workflow/Uv0EQzp3OmJ7lMUt">Open locally</a></article>
+    </div>
+
+    <h2>Need help?</h2>
+    <p class="lead">Read the complete <a href="https://github.com/SidM13/Gallery-AI--Agent-/blob/main/RUN-ALL-LOCALLY.md">local installation guide</a>. Google credentials remain private to each local n8n installation.</p>
+  </main>
+</body>
+</html>
