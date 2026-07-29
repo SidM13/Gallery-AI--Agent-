@@ -42,6 +42,12 @@
               "type": "string"
             },
             {
+              "id": "report-recipient",
+              "name": "reportRecipientEmail",
+              "value": "victormascot@gmail.com",
+              "type": "string"
+            },
+            {
               "id": "model",
               "name": "model",
               "value": "qwen3:4b",
@@ -341,7 +347,7 @@
         "subject": "={{ `Weekly Gallery Report - ${$now.toISODate()} - Ready for Review` }}",
         "message": "={{ $json.body }}",
         "options": {
-          "sendTo": "={{ $('Configuration').item.json.ownerEmail }}"
+          "sendTo": "={{ [$('Configuration').item.json.ownerEmail, $('Configuration').item.json.reportRecipientEmail].filter(Boolean).join(',') }}"
         }
       },
       "id": "gallery-49",

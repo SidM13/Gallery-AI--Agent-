@@ -39,6 +39,7 @@ const config = (x, y) => node("Configuration", "n8n-nodes-base.set", [x, y], {
   assignments: { assignments: [
     { id: "spreadsheet", name: "spreadsheetId", value: "REPLACE_WITH_GOOGLE_SHEET_ID", type: "string" },
     { id: "owner", name: "ownerEmail", value: "owner@example.com", type: "string" },
+    { id: "report-recipient", name: "reportRecipientEmail", value: "victormascot@gmail.com", type: "string" },
     { id: "model", name: "model", value: "={{ $env.OLLAMA_MODEL || 'qwen3:8b' }}", type: "string" },
     { id: "ollama", name: "ollamaUrl", value: "={{ ($env.OLLAMA_BASE_URL || 'http://ollama:11434') + '/api/generate' }}", type: "string" },
   ]},
@@ -272,7 +273,7 @@ const save = (filename, value) =>
     parseResponse("Parse Weekly Report", 360, 120,
       "if (!parsed.subject || !parsed.body) throw new Error('Invalid weekly report');"),
     gmailDraft("Create Weekly Report Draft", 600, 120,
-      "={{ $('Configuration').item.json.ownerEmail }}",
+      "={{ [$('Configuration').item.json.ownerEmail, $('Configuration').item.json.reportRecipientEmail].filter(Boolean).join(',') }}",
       "={{ `Weekly Gallery Report - ${$now.toISODate()} - Ready for Review` }}",
       "={{ $json.body }}"),
   ];

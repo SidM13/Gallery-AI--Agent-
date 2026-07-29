@@ -40,6 +40,8 @@ one before activating it.
 ## Safety properties
 
 - Artist, collector, digest, and report content is created as a Gmail draft.
+- Weekly report drafts are addressed to the owner and `victormascot@gmail.com`;
+  the owner still reviews and sends them manually.
 - Only short owner notifications are sent automatically.
 - All imported workflows start inactive.
 - Qwen is prompted to return JSON and not invent missing facts.
