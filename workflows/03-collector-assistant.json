@@ -59,7 +59,7 @@
             {
               "id": "ollama",
               "name": "ollamaUrl",
-              "value": "http://127.0.0.1:11434/api/generate",
+              "value": "http://ollama:11434/api/generate",
               "type": "string"
             }
           ]

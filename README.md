@@ -20,18 +20,19 @@ one before activating it.
 - `config/google-form-fields.md` — form field contract and Google Forms option
 - `OWNER-MANUAL.md` — non-technical operating guide
 - `ENGINEER-RUNBOOK.md` — deployment, credential, testing, and rollback steps
+- `RUN-ALL-LOCALLY.md` — one-command local stack and all-agent startup guide
 - `scripts/build-workflows.mjs` — reproducibly generates workflow JSON
 - `scripts/validate-workflows.mjs` — checks workflow structure and connections
 
 ## Quick start
 
 1. Copy `.env.example` to `.env` and replace every secret/default.
-2. Run `docker compose up -d`.
-3. Open `http://localhost:5678` and create the n8n owner account.
-4. Create the “Gallery AI Database” spreadsheet from `config/sheets-schema.csv`.
-5. In n8n, create OAuth2 credentials for Google Sheets, Gmail, and Calendar.
-6. Import all four JSON files from `workflows/`.
-7. Follow `ENGINEER-RUNBOOK.md` to configure, test, and activate one agent at a
+2. Run `make validate && make up && make import`.
+3. Run `make doctor` to verify n8n, Ollama, and Qwen.
+4. Open `http://localhost:5678` and create the n8n owner account.
+5. Create the “Gallery AI Database” spreadsheet from `config/sheets-schema.csv`.
+6. In n8n, create OAuth2 credentials for Google Sheets, Gmail, and Calendar.
+7. Follow `RUN-ALL-LOCALLY.md` to test and activate the four agents one at a
    time.
 
 ## Safety properties
