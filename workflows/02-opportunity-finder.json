@@ -1,0 +1,502 @@
+{
+  "name": "Gallery AI - Agent 2 - Opportunity Finder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "gallery-11",
+      "name": "Every Monday 9 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "spreadsheet",
+              "name": "spreadsheetId",
+              "value": "1lYH72CxJaFyPKcr52gI-VvgrHyEr91B7fus9YuTW2tg",
+              "type": "string"
+            },
+            {
+              "id": "owner",
+              "name": "ownerEmail",
+              "value": "manchandasiddharth.2014@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "model",
+              "name": "model",
+              "value": "qwen3:4b",
+              "type": "string"
+            },
+            {
+              "id": "ollama",
+              "name": "ollamaUrl",
+              "value": "http://127.0.0.1:11434/api/generate",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gallery-12",
+      "name": "Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -900,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "urls",
+              "type": "array",
+              "value": "={{ ['https://opencallsindex.substack.com/feed','https://www.thisiscolossal.com/category/opportunities/feed/','https://resartis.org/feed/'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gallery-13",
+      "name": "Opportunity Feed URLs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -700,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "urls",
+        "options": {
+          "destinationFieldName": "url"
+        }
+      },
+      "id": "gallery-14",
+      "name": "One Item Per Feed",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}"
+      },
+      "id": "gallery-15",
+      "name": "Read RSS Feed",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -300,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().slice(0, 150).map(({json}) => ({json:{title:json.title ?? '',link:json.link ?? '',published:json.isoDate ?? json.pubDate ?? '',summary:(json.contentSnippet ?? json.content ?? '').slice(0,1200)}}));"
+      },
+      "id": "gallery-16",
+      "name": "Limit and Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Configuration').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Artists",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "gallery-17",
+      "name": "Read Artists",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        120,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rq86CkeCagQw7w4N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const opportunities = $('Limit and Normalize').all().map(x => x.json); const artists = $input.all().map(x => x.json); return [{json:{opportunities,artists}}];"
+      },
+      "id": "gallery-18",
+      "name": "Bundle Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        340,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Configuration').item.json.ollamaUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Configuration').item.json.model, stream: false, think: false, format: 'json', prompt: `Match only relevant, future-dated opportunities to represented artists. Respect stated geography and medium. Never invent a deadline. Return JSON only: {\"matches\":[{\"title\":\"\",\"link\":\"\",\"deadline\":\"\",\"matchedArtist\":\"\",\"reason\":\"\"}]}. Data: ${JSON.stringify($json)}` } }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "gallery-19",
+      "name": "Match Opportunities",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.response ?? $json.data?.response;\nif (!raw) throw new Error('Ollama returned no response');\nlet parsed;\ntry { parsed = JSON.parse(raw); } catch { throw new Error('Ollama response was not valid JSON: ' + raw.slice(0, 200)); }\nif (!Array.isArray(parsed.matches)) throw new Error('Missing matches array');\nreturn [{ json: parsed }];"
+      },
+      "id": "gallery-20",
+      "name": "Parse Matches",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "matches",
+        "options": {}
+      },
+      "id": "gallery-21",
+      "name": "One Item Per Match",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Configuration').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Opportunities",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Link": "={{ $json.link }}",
+            "Title": "={{ $json.title }}",
+            "Deadline": "={{ $json.deadline }}",
+            "Matched_Artist": "={{ $json.matchedArtist }}",
+            "Status": "New"
+          },
+          "matchingColumns": [
+            "Link"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "gallery-22",
+      "name": "Save Opportunity",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1220,
+        -80
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rq86CkeCagQw7w4N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const matches = $('Parse Matches').item.json.matches; const lines = matches.length ? matches.map(m => `• ${m.title}\\n  Artist: ${m.matchedArtist}\\n  Deadline: ${m.deadline || 'Not stated'}\\n  ${m.link}\\n  Why: ${m.reason}`).join('\\n\\n') : 'No strong matches this week.'; return [{json:{subject:'Monday Morning Opportunity Digest',body:`Opportunity matches for review\\n\\n${lines}\\n\\nVerify eligibility and deadlines at the original links before forwarding.`}}];"
+      },
+      "id": "gallery-23",
+      "name": "Prepare Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "create",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body }}",
+        "options": {
+          "sendTo": "={{ $('Configuration').item.json.ownerEmail }}"
+        }
+      },
+      "id": "gallery-24",
+      "name": "Create Digest Draft",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1220,
+        120
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tkLWkh2OfoK77AHd",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Configuration').item.json.ownerEmail }}",
+        "subject": "Monday opportunity digest ready",
+        "message": "The Monday Morning Opportunity Digest is in Gmail Drafts. Review source links and deadlines before forwarding.",
+        "options": {}
+      },
+      "id": "gallery-25",
+      "name": "Notify Owner",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1440,
+        120
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tkLWkh2OfoK77AHd",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every Monday 9 AM": {
+      "main": [
+        [
+          {
+            "node": "Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuration": {
+      "main": [
+        [
+          {
+            "node": "Opportunity Feed URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opportunity Feed URLs": {
+      "main": [
+        [
+          {
+            "node": "One Item Per Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One Item Per Feed": {
+      "main": [
+        [
+          {
+            "node": "Read RSS Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read RSS Feed": {
+      "main": [
+        [
+          {
+            "node": "Limit and Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit and Normalize": {
+      "main": [
+        [
+          {
+            "node": "Read Artists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Artists": {
+      "main": [
+        [
+          {
+            "node": "Bundle Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bundle Context": {
+      "main": [
+        [
+          {
+            "node": "Match Opportunities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Opportunities": {
+      "main": [
+        [
+          {
+            "node": "Parse Matches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Matches": {
+      "main": [
+        [
+          {
+            "node": "One Item Per Match",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One Item Per Match": {
+      "main": [
+        [
+          {
+            "node": "Save Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Digest": {
+      "main": [
+        [
+          {
+            "node": "Create Digest Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Digest Draft": {
+      "main": [
+        [
+          {
+            "node": "Notify Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Vancouver",
+    "saveManualExecutions": true
+  },
+  "versionId": "gallery-workflow-025",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [],
+  "id": "auRudhRN3zvaZTvH"
+}

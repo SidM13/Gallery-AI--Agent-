@@ -1,0 +1,499 @@
+{
+  "name": "Gallery AI - Agent 4 - Weekly Gallery Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                5
+              ],
+              "triggerAtHour": 16
+            }
+          ]
+        }
+      },
+      "id": "gallery-38",
+      "name": "Every Friday 4 PM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "spreadsheet",
+              "name": "spreadsheetId",
+              "value": "1lYH72CxJaFyPKcr52gI-VvgrHyEr91B7fus9YuTW2tg",
+              "type": "string"
+            },
+            {
+              "id": "owner",
+              "name": "ownerEmail",
+              "value": "manchandasiddharth.2014@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "model",
+              "name": "model",
+              "value": "qwen3:4b",
+              "type": "string"
+            },
+            {
+              "id": "ollama",
+              "name": "ollamaUrl",
+              "value": "http://127.0.0.1:11434/api/generate",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gallery-39",
+      "name": "Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1000,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Configuration').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Artists",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "gallery-40",
+      "name": "Read Artists",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -780,
+        -160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rq86CkeCagQw7w4N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Configuration').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Collectors",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "gallery-41",
+      "name": "Read Collectors",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -570,
+        -160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rq86CkeCagQw7w4N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Configuration').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Artworks",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "gallery-42",
+      "name": "Read Artworks",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -360,
+        -160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rq86CkeCagQw7w4N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Configuration').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sales",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "gallery-43",
+      "name": "Read Sales",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -150,
+        -160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rq86CkeCagQw7w4N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Configuration').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Opportunities",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "gallery-44",
+      "name": "Read Opportunities",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        60,
+        -160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rq86CkeCagQw7w4N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "primary",
+          "mode": "list",
+          "cachedResultName": "Primary"
+        },
+        "timeMin": "={{ $now.toISO() }}",
+        "timeMax": "={{ $now.plus({days: 30}).toISO() }}",
+        "options": {
+          "singleEvents": true,
+          "orderBy": "startTime"
+        }
+      },
+      "id": "gallery-45",
+      "name": "Upcoming Calendar Events",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -360,
+        120
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "4exD6LSOYlSTv2JQ",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = n => $(n).all().map(x=>x.json); return [{json:{periodEnding:$now.toISODate(),artists:rows('Read Artists'),collectors:rows('Read Collectors'),artworks:rows('Read Artworks'),sales:rows('Read Sales'),opportunities:rows('Read Opportunities'),calendar:$input.all().map(x=>x.json)}}];"
+      },
+      "id": "gallery-46",
+      "name": "Bundle Weekly Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Configuration').item.json.ollamaUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Configuration').item.json.model, stream: false, think: false, format: 'json', prompt: `Act as a careful gallery director. Summarize only the supplied data. Distinguish totals from this-week activity when dates allow it. Highlight new additions, sales, upcoming deadlines/events, inventory risks, and exactly 3 practical actions. Return JSON only: {\"subject\":\"\",\"body\":\"plain text\"}. Data: ${JSON.stringify($json)}` } }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "gallery-47",
+      "name": "Write Weekly Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.response ?? $json.data?.response;\nif (!raw) throw new Error('Ollama returned no response');\nlet parsed;\ntry { parsed = JSON.parse(raw); } catch { parsed = {}; }\nif (!parsed.subject || !parsed.body) {\n  const d = $('Bundle Weekly Data').item.json;\n  const money = n => new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD'}).format(Number(n||0));\n  const revenue = d.sales.reduce((sum,s)=>sum+Number(s.Price||0),0);\n  const available = d.artworks.filter(a=>a.Status==='Available');\n  const deadlines = d.opportunities.filter(o=>o.Status!=='Closed');\n  parsed = {\n    subject: `Weekly Gallery Report - ${d.periodEnding}`,\n    body: `DEMO WEEKLY GALLERY REPORT\\nPeriod ending: ${d.periodEnding}\\n\\nSnapshot\\n- Artists: ${d.artists.length}\\n- Collectors: ${d.collectors.length}\\n- Artworks: ${d.artworks.length} (${available.length} available)\\n- Recorded sales: ${d.sales.length}, totaling ${money(revenue)}\\n- Open opportunities: ${deadlines.length}\\n- Upcoming calendar events: ${d.calendar.filter(e=>Object.keys(e).length).length}\\n\\nHighlights\\n- New demo artist: ${d.artists[0]?.Name || 'None'}\\n- Demo artwork: ${d.artworks[0]?.Title || 'None'} at ${money(d.artworks[0]?.Price)}\\n- Opportunity: ${deadlines[0]?.Title || 'None'}${deadlines[0]?.Deadline ? ` (deadline ${deadlines[0].Deadline})` : ''}\\n\\nRecommended actions\\n1. Review the available artwork and confirm its gallery presentation details.\\n2. Review the open opportunity and prepare application materials before the deadline.\\n3. Follow up with the demo collector about their stated style and budget.\\n\\nThis email was generated by the local n8n + Qwen demo workflow using clearly labeled fictional data.`\n  };\n}\nreturn [{ json: parsed }];"
+      },
+      "id": "gallery-48",
+      "name": "Parse Weekly Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "create",
+        "subject": "={{ `Weekly Gallery Report - ${$now.toISODate()} - Ready for Review` }}",
+        "message": "={{ $json.body }}",
+        "options": {
+          "sendTo": "={{ $('Configuration').item.json.ownerEmail }}"
+        }
+      },
+      "id": "gallery-49",
+      "name": "Create Weekly Report Draft",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        600,
+        120
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tkLWkh2OfoK77AHd",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every Friday 4 PM": {
+      "main": [
+        [
+          {
+            "node": "Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuration": {
+      "main": [
+        [
+          {
+            "node": "Read Artists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Artists": {
+      "main": [
+        [
+          {
+            "node": "Read Collectors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Collectors": {
+      "main": [
+        [
+          {
+            "node": "Read Artworks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Artworks": {
+      "main": [
+        [
+          {
+            "node": "Read Sales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Sales": {
+      "main": [
+        [
+          {
+            "node": "Read Opportunities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Opportunities": {
+      "main": [
+        [
+          {
+            "node": "Upcoming Calendar Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upcoming Calendar Events": {
+      "main": [
+        [
+          {
+            "node": "Bundle Weekly Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bundle Weekly Data": {
+      "main": [
+        [
+          {
+            "node": "Write Weekly Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Weekly Report": {
+      "main": [
+        [
+          {
+            "node": "Parse Weekly Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Weekly Report": {
+      "main": [
+        [
+          {
+            "node": "Create Weekly Report Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Vancouver",
+    "saveManualExecutions": true
+  },
+  "versionId": "gallery-workflow-049",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [],
+  "id": "Uv0EQzp3OmJ7lMUt"
+}

@@ -1,0 +1,426 @@
+{
+  "name": "Gallery AI - Agent 1 - Artist Onboarding",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Artist Application",
+        "formDescription": "Apply for gallery representation.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Style"
+            },
+            {
+              "fieldLabel": "Location"
+            },
+            {
+              "fieldLabel": "Portfolio",
+              "fieldType": "url"
+            },
+            {
+              "fieldLabel": "Bio",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Artist Statement",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gallery-1",
+      "name": "Artist Application Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -900,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "spreadsheet",
+              "name": "spreadsheetId",
+              "value": "1lYH72CxJaFyPKcr52gI-VvgrHyEr91B7fus9YuTW2tg",
+              "type": "string"
+            },
+            {
+              "id": "owner",
+              "name": "ownerEmail",
+              "value": "manchandasiddharth.2014@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "model",
+              "name": "model",
+              "value": "qwen3:4b",
+              "type": "string"
+            },
+            {
+              "id": "ollama",
+              "name": "ollamaUrl",
+              "value": "http://127.0.0.1:11434/api/generate",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gallery-2",
+      "name": "Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -680,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "name",
+              "value": "={{ $('Artist Application Form').item.json.Name }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "email",
+              "value": "={{ $('Artist Application Form').item.json.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "style",
+              "value": "={{ $('Artist Application Form').item.json.Style || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "location",
+              "value": "={{ $('Artist Application Form').item.json.Location || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "portfolio",
+              "value": "={{ $('Artist Application Form').item.json.Portfolio || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "bio",
+              "value": "={{ $('Artist Application Form').item.json.Bio || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a7",
+              "name": "statement",
+              "value": "={{ $('Artist Application Form').item.json['Artist Statement'] || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gallery-3",
+      "name": "Normalize Application",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -460,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Configuration').item.json.ollamaUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Configuration').item.json.model, stream: false, think: false, format: 'json', prompt: `You are a gallery intake assistant. Return JSON only: {\"summary\":\"exactly three concise sentences\"}. Do not invent facts. Application: ${JSON.stringify($('Normalize Application').item.json)}` } }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "gallery-4",
+      "name": "Summarize Artist",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.response ?? $json.data?.response;\nif (!raw) throw new Error('Ollama returned no response');\nlet parsed;\ntry { parsed = JSON.parse(raw); } catch { throw new Error('Ollama response was not valid JSON: ' + raw.slice(0, 200)); }\nif (typeof parsed.summary !== 'string') throw new Error('Missing summary');\nreturn [{ json: parsed }];"
+      },
+      "id": "gallery-5",
+      "name": "Parse Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Configuration').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Artists",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Normalize Application').item.json.name }}",
+            "Email": "={{ $('Normalize Application').item.json.email }}",
+            "Style": "={{ $('Normalize Application').item.json.style }}",
+            "Location": "={{ $('Normalize Application').item.json.location }}",
+            "Portfolio": "={{ $('Normalize Application').item.json.portfolio }}",
+            "AI_Summary": "={{ $('Parse Summary').item.json.summary }}",
+            "Date_Added": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "Name"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "gallery-6",
+      "name": "Save Artist",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        260,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rq86CkeCagQw7w4N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Configuration').item.json.ollamaUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Configuration').item.json.model, stream: false, think: false, format: 'json', prompt: `Write a warm, professional gallery application acknowledgement. It must not imply acceptance or representation. State that the team will review the portfolio and follow up. Return JSON only: {\"subject\":\"...\",\"body\":\"plain text...\"}. Artist: ${JSON.stringify($('Normalize Application').item.json)} Summary: ${$('Parse Summary').item.json.summary}` } }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "gallery-7",
+      "name": "Write Welcome Draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.response ?? $json.data?.response;\nif (!raw) throw new Error('Ollama returned no response');\nlet parsed;\ntry { parsed = JSON.parse(raw); } catch { throw new Error('Ollama response was not valid JSON: ' + raw.slice(0, 200)); }\nif (!parsed.subject || !parsed.body) throw new Error('Draft requires subject and body');\nreturn [{ json: parsed }];"
+      },
+      "id": "gallery-8",
+      "name": "Parse Welcome Draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        740,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "create",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body }}",
+        "options": {
+          "sendTo": "={{ $('Normalize Application').item.json.email }}"
+        }
+      },
+      "id": "gallery-9",
+      "name": "Create Welcome Draft",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        980,
+        0
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tkLWkh2OfoK77AHd",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Configuration').item.json.ownerEmail }}",
+        "subject": "New artist application received",
+        "message": "={{ `A draft reply for ${$('Normalize Application').item.json.name} is in Gmail Drafts. Review, edit, and send it manually.` }}",
+        "options": {}
+      },
+      "id": "gallery-10",
+      "name": "Notify Owner",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1220,
+        0
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tkLWkh2OfoK77AHd",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Artist Application Form": {
+      "main": [
+        [
+          {
+            "node": "Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuration": {
+      "main": [
+        [
+          {
+            "node": "Normalize Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Application": {
+      "main": [
+        [
+          {
+            "node": "Summarize Artist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize Artist": {
+      "main": [
+        [
+          {
+            "node": "Parse Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Summary": {
+      "main": [
+        [
+          {
+            "node": "Save Artist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Artist": {
+      "main": [
+        [
+          {
+            "node": "Write Welcome Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Welcome Draft": {
+      "main": [
+        [
+          {
+            "node": "Parse Welcome Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Welcome Draft": {
+      "main": [
+        [
+          {
+            "node": "Create Welcome Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Welcome Draft": {
+      "main": [
+        [
+          {
+            "node": "Notify Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Vancouver",
+    "saveManualExecutions": true
+  },
+  "versionId": "gallery-workflow-010",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [],
+  "id": "PttJsLrfRftXLDZc"
+}

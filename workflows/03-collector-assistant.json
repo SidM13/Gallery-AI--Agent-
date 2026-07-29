@@ -1,0 +1,460 @@
+{
+  "name": "Gallery AI - Agent 3 - Collector Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "labelIds": [
+            "Label_5326392818932073924"
+          ],
+          "readStatus": "unread"
+        },
+        "options": {}
+      },
+      "id": "gallery-26",
+      "name": "Collector Inquiry Label",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1000,
+        0
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tkLWkh2OfoK77AHd",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "spreadsheet",
+              "name": "spreadsheetId",
+              "value": "1lYH72CxJaFyPKcr52gI-VvgrHyEr91B7fus9YuTW2tg",
+              "type": "string"
+            },
+            {
+              "id": "owner",
+              "name": "ownerEmail",
+              "value": "manchandasiddharth.2014@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "model",
+              "name": "model",
+              "value": "qwen3:4b",
+              "type": "string"
+            },
+            {
+              "id": "ollama",
+              "name": "ollamaUrl",
+              "value": "http://127.0.0.1:11434/api/generate",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gallery-27",
+      "name": "Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -780,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "i1",
+              "name": "sender",
+              "value": "={{ $('Collector Inquiry Label').item.json.from?.value?.[0]?.address || $('Collector Inquiry Label').item.json.From || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "i2",
+              "name": "subject",
+              "value": "={{ $('Collector Inquiry Label').item.json.subject || $('Collector Inquiry Label').item.json.Subject || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "i3",
+              "name": "body",
+              "value": "={{ $('Collector Inquiry Label').item.json.textPlain || $('Collector Inquiry Label').item.json.snippet || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "gallery-28",
+      "name": "Normalize Inquiry",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -560,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Configuration').item.json.ollamaUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Configuration').item.json.model, stream: false, think: false, format: 'json', prompt: `Extract only facts explicitly present in this inquiry. Return JSON only: {\"name\":\"\",\"budget\":\"\",\"preferredStyle\":\"\",\"interests\":\"\"}. Use empty strings for unknowns. Inquiry: ${JSON.stringify($('Normalize Inquiry').item.json)}` } }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "gallery-29",
+      "name": "Extract Collector Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -340,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.response ?? $json.data?.response;\nif (!raw) throw new Error('Ollama returned no response');\nlet parsed;\ntry { parsed = JSON.parse(raw); } catch { throw new Error('Ollama response was not valid JSON: ' + raw.slice(0, 200)); }\n\nreturn [{ json: parsed }];"
+      },
+      "id": "gallery-30",
+      "name": "Parse Collector Profile",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Configuration').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Collectors",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $('Normalize Inquiry').item.json.sender }}",
+            "Name": "={{ $('Parse Collector Profile').item.json.name }}",
+            "Style_Interest": "={{ $('Parse Collector Profile').item.json.preferredStyle }}",
+            "Budget": "={{ $('Parse Collector Profile').item.json.budget }}",
+            "Date_Added": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "gallery-31",
+      "name": "Save Collector",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        100,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rq86CkeCagQw7w4N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Configuration').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Artworks",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "gallery-32",
+      "name": "Read Artworks",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        320,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rq86CkeCagQw7w4N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const inventory = $input.all().map(x=>x.json).filter(x => String(x.Status).toLowerCase() === 'available'); return [{json:{profile:$('Parse Collector Profile').item.json,inquiry:$('Normalize Inquiry').item.json,inventory}}];"
+      },
+      "id": "gallery-33",
+      "name": "Available Inventory Only",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        540,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Configuration').item.json.ollamaUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Configuration').item.json.model, stream: false, think: false, format: 'json', prompt: `Recommend at most 3 artworks from inventory only. Do not alter titles, artists, prices, or availability. Do not claim fit when budget is unknown. Write a warm reply and invite a viewing. Return JSON only: {\"subject\":\"\",\"body\":\"\",\"artworkTitles\":[]}. Context: ${JSON.stringify($json)}` } }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "gallery-34",
+      "name": "Recommend and Draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        760,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.response ?? $json.data?.response;\nif (!raw) throw new Error('Ollama returned no response');\nlet parsed;\ntry { parsed = JSON.parse(raw); } catch { throw new Error('Ollama response was not valid JSON: ' + raw.slice(0, 200)); }\nif (!parsed.subject || !parsed.body || !Array.isArray(parsed.artworkTitles)) throw new Error('Invalid collector draft');\nreturn [{ json: parsed }];"
+      },
+      "id": "gallery-35",
+      "name": "Parse Collector Draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "create",
+        "subject": "={{ `Re: ${$('Normalize Inquiry').item.json.subject}` }}",
+        "message": "={{ $json.body }}",
+        "options": {
+          "sendTo": "={{ $('Normalize Inquiry').item.json.sender }}"
+        }
+      },
+      "id": "gallery-36",
+      "name": "Create Collector Draft",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1200,
+        0
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tkLWkh2OfoK77AHd",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Configuration').item.json.ownerEmail }}",
+        "subject": "Collector draft reply ready",
+        "message": "={{ `A draft reply to ${$('Normalize Inquiry').item.json.sender} is in Gmail Drafts. Confirm prices and availability before sending.` }}",
+        "options": {}
+      },
+      "id": "gallery-37",
+      "name": "Notify Owner",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1420,
+        0
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tkLWkh2OfoK77AHd",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Collector Inquiry Label": {
+      "main": [
+        [
+          {
+            "node": "Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuration": {
+      "main": [
+        [
+          {
+            "node": "Normalize Inquiry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Inquiry": {
+      "main": [
+        [
+          {
+            "node": "Extract Collector Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Collector Profile": {
+      "main": [
+        [
+          {
+            "node": "Parse Collector Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Collector Profile": {
+      "main": [
+        [
+          {
+            "node": "Save Collector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Collector": {
+      "main": [
+        [
+          {
+            "node": "Read Artworks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Artworks": {
+      "main": [
+        [
+          {
+            "node": "Available Inventory Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Available Inventory Only": {
+      "main": [
+        [
+          {
+            "node": "Recommend and Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recommend and Draft": {
+      "main": [
+        [
+          {
+            "node": "Parse Collector Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Collector Draft": {
+      "main": [
+        [
+          {
+            "node": "Create Collector Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Collector Draft": {
+      "main": [
+        [
+          {
+            "node": "Notify Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Vancouver",
+    "saveManualExecutions": true
+  },
+  "versionId": "gallery-workflow-037",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [],
+  "id": "UwZtXNHQCHcPZkLR"
+}

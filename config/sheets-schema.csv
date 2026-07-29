@@ -1,0 +1,29 @@
+Tab,Column,Required,Notes
+Artists,Name,Yes,Artist full name
+Artists,Email,Yes,Used only for owner-reviewed drafts
+Artists,Style,No,Comma-separated styles
+Artists,Location,No,City/region/country
+Artists,Portfolio,No,URL
+Artists,AI_Summary,No,Generated three-sentence summary
+Artists,Date_Added,Yes,ISO-8601 timestamp
+Collectors,Name,No,Extracted from inquiry
+Collectors,Email,Yes,Sender address
+Collectors,Style_Interest,No,Extracted preference
+Collectors,Budget,No,Keep currency in value
+Collectors,Date_Added,Yes,ISO-8601 timestamp
+Artworks,Title,Yes,Artwork title
+Artworks,Artist,Yes,Must match Artists.Name
+Artworks,Style,No,Style or genre
+Artworks,Medium,No,Physical medium
+Artworks,Price,Yes,Numeric value plus currency
+Artworks,Status,Yes,Available Reserved or Sold
+Opportunities,Title,Yes,Opportunity title
+Opportunities,Link,Yes,Canonical URL
+Opportunities,Deadline,No,ISO date when known
+Opportunities,Matched_Artist,Yes,Must match Artists.Name
+Opportunities,Status,Yes,Default New
+Sales,Artwork,Yes,Must match Artworks.Title
+Sales,Collector,Yes,Collector name or email
+Sales,Price,Yes,Numeric value plus currency
+Sales,Date,Yes,ISO date
+
