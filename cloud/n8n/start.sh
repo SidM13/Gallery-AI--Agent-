@@ -3,7 +3,7 @@ set -eu
 
 export_file=$(mktemp)
 if n8n export:workflow --all --output="$export_file" >/dev/null 2>&1 \
-  && grep -Eq '^\s*\[\s*\]\s*$' "$export_file"; then
+  && grep -Eq '^[[:space:]]*\[[[:space:]]*\][[:space:]]*$' "$export_file"; then
   echo "Importing Gallery AI cloud workflows"
   for workflow in /opt/gallery-ai/cloud-workflows/*.json; do
     n8n import:workflow --input="$workflow"
