@@ -12,4 +12,12 @@ if [ "${FORCE_GALLERY_IMPORT:-false}" = "true" ] \
 fi
 rm -f "$export_file"
 
+if [ -n "${GALLERY_CREDENTIALS_B64:-}" ]; then
+  credentials_file=$(mktemp)
+  printf '%s' "$GALLERY_CREDENTIALS_B64" | base64 -d > "$credentials_file"
+  echo "Importing encrypted Gallery AI credentials"
+  n8n import:credentials --input="$credentials_file"
+  rm -f "$credentials_file"
+fi
+
 exec n8n start
